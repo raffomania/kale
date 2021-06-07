@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0.40"
 chrono = "0.4.19"
+chrono-tz = "0.5.3"
 home = "0.5.3"
 ical = "0.7.0"
 tui = "0.15.0"
