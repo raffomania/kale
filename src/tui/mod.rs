@@ -1,15 +1,12 @@
 use anyhow::Result;
 use crossterm::{
-    event::{self, KeyCode},
+    event::{KeyCode, KeyModifiers},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
-use std::{io, sync::mpsc, thread};
+use std::io;
 
-enum Event<I> {
-    Input(I),
-    Resize,
-}
+mod events;
 
 use tui::{
     backend::CrosstermBackend,
@@ -18,21 +15,15 @@ use tui::{
     Terminal,
 };
 
+use self::events::Event;
+
 pub fn start() -> Result<()> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     stdout.execute(EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-
-    let (tx, rx) = mpsc::channel();
-    thread::spawn(move || loop {
-        match event::read().unwrap() {
-            event::Event::Key(key) => tx.send(Event::Input(key)).unwrap(),
-            event::Event::Resize(_, _) => tx.send(Event::Resize).unwrap(),
-            _ => {}
-        }
-    });
+    let rx = events::listen()?;
 
     loop {
         terminal.draw(|f| {
@@ -52,13 +43,26 @@ pub fn start() -> Result<()> {
         })?;
 
         match rx.recv()? {
-            Event::Input(event) => match event.code {
-                KeyCode::Char('q') => {
+            Event::Input(event) => {
+                if event.modifiers.contains(KeyModifiers::CONTROL)
+                    && event.code == KeyCode::Char('c')
+                {
                     break;
                 }
-                _ => {}
-            },
+
+                match event.code {
+                    KeyCode::Char('q') => {
+                        break;
+                    }
+                    a => {
+                        dbg!(a);
+                    }
+                }
+            }
             Event::Resize => {}
+            Event::Quit => {
+                break;
+            }
         }
     }
 
