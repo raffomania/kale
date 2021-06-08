@@ -68,7 +68,6 @@ fn parse_naive_datetime(
         .first()
         .context("Timezone param contained no value")?;
     let zone: Tz = zone.parse().map_err(|e: String| anyhow!(e))?;
-    println!("{:?}", zone);
     const ITEMS: &'static [Item<'static>] = &[
         Item::Numeric(Numeric::Year, Pad::Zero),
         Item::Numeric(Numeric::Month, Pad::Zero),
