@@ -1,5 +1,5 @@
 [package]
-name = "cal"
+name = "kale"
 version = "0.1.0"
 authors = ["Rafael Epplée <hello@rafa.ee>"]
 edition = "2018"
