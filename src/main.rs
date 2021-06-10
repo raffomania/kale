@@ -1,20 +1,11 @@
-use anyhow::{Context, Result};
-use read::read_events;
-use std::convert::TryFrom;
+use anyhow::Result;
+use calendar::Calendar;
 
-mod event;
-mod read;
+mod calendar;
 mod tui;
 
 fn main() -> Result<()> {
-    let _events = read_events()?.into_iter().map(|(path, event)| {
-        event::Event::try_from(event.clone())
-            .context(format!(
-                "Could not conform event {:?}:\n {:#?}",
-                path, event.properties
-            ))
-            .unwrap()
-    });
-    tui::start()?;
+    let calendar = Calendar::new()?;
+    tui::start(calendar)?;
     Ok(())
 }

@@ -1,23 +1,21 @@
 use anyhow::Result;
 use crossterm::{
-    event::{KeyCode, KeyModifiers},
+    event::{KeyCode, KeyEvent, KeyModifiers},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
 use std::io;
 
+mod entries;
 mod events;
 
-use tui::{
-    backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout},
-    widgets::{Block, Borders},
-    Terminal,
-};
+use tui::{backend::CrosstermBackend, Terminal};
+
+use crate::calendar::Calendar;
 
 use self::events::Event;
 
-pub fn start() -> Result<()> {
+pub fn start(calendar: Calendar) -> Result<()> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     stdout.execute(EnterAlternateScreen)?;
@@ -27,25 +25,15 @@ pub fn start() -> Result<()> {
 
     loop {
         terminal.draw(|f| {
-            let size = f.size();
-            let constraints: Vec<Constraint> =
-                (0..7).map(|_| Constraint::Percentage(100 / 7)).collect();
-            let layout = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints(constraints)
-                .split(size);
-            for i in 0..7 {
-                let block = Block::default()
-                    .title(format!("Day {}", i))
-                    .borders(Borders::all());
-                f.render_widget(block, layout[i]);
-            }
+            entries::draw(f, &calendar);
         })?;
 
         match rx.recv()? {
             Event::Input(event) => {
-                if event.modifiers.contains(KeyModifiers::CONTROL)
-                    && event.code == KeyCode::Char('c')
+                if let KeyEvent {
+                    modifiers: KeyModifiers::CONTROL,
+                    code: KeyCode::Char('c'),
+                } = event
                 {
                     break;
                 }
@@ -54,12 +42,12 @@ pub fn start() -> Result<()> {
                     KeyCode::Char('q') => {
                         break;
                     }
-                    a => {
-                        dbg!(a);
-                    }
+                    _ => {}
                 }
             }
-            Event::Resize => {}
+            Event::Resize => {
+                dbg!("resize");
+            }
             Event::Quit => {
                 break;
             }

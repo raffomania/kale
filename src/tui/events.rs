@@ -20,7 +20,7 @@ pub fn listen() -> Result<mpsc::Receiver<Event>> {
         match event::read().unwrap() {
             event::Event::Key(key) => terminal_events.send(Event::Input(key)).unwrap(),
             event::Event::Resize(_, _) => terminal_events.send(Event::Resize).unwrap(),
-            _ => {}
+            event::Event::Mouse(_) => {}
         }
     });
 

@@ -1,20 +1,20 @@
 use anyhow::{anyhow, Context, Result};
 use chrono::{
     format::{Fixed, Item, Numeric, Pad},
-    Date, DateTime, TimeZone, Utc,
+    DateTime, Datelike, Local, TimeZone,
 };
 use chrono_tz::Tz;
 use ical::{parser::ical::component::IcalEvent, property::Property};
 use std::convert::TryFrom;
 
 #[derive(Debug)]
-pub struct Event {
-    name: String,
-    start_date: DateTime<Utc>,
-    is_whole_day: bool,
+pub struct Entry {
+    pub name: String,
+    pub start_date: DateTime<Local>,
+    pub is_whole_day: bool,
 }
 
-impl TryFrom<IcalEvent> for Event {
+impl TryFrom<IcalEvent> for Entry {
     type Error = anyhow::Error;
 
     fn try_from(event: IcalEvent) -> Result<Self> {
@@ -26,7 +26,7 @@ impl TryFrom<IcalEvent> for Event {
             Ok(date) => (date, true),
             Err(_) => (parse_datetime(&start_date)?, false),
         };
-        Ok(Event {
+        Ok(Entry {
             name,
             start_date,
             is_whole_day,
@@ -48,7 +48,7 @@ fn find_value(event: IcalEvent, name: &str) -> Result<String> {
         .context(format!("Property without value: {}", name))
 }
 
-fn parse_datetime(prop: &Property) -> Result<DateTime<Utc>> {
+fn parse_datetime(prop: &Property) -> Result<DateTime<Local>> {
     let value = prop.value.as_ref().context("no value found")?;
     parse_utc_datetime(&value)
         .map_err(|e| e.context("datetime parsing failed, trying simple date"))
@@ -58,7 +58,7 @@ fn parse_datetime(prop: &Property) -> Result<DateTime<Utc>> {
 fn parse_naive_datetime(
     value: &str,
     params: &Option<Vec<(String, Vec<String>)>>,
-) -> Result<DateTime<Utc>> {
+) -> Result<DateTime<Local>> {
     let params = params.as_ref().context("Need params here")?;
     let zone = params
         .iter()
@@ -91,10 +91,10 @@ fn parse_naive_datetime(
         .from_local_datetime(&local)
         .single()
         .context("Found an ambiguous date")?
-        .with_timezone(&Utc))
+        .with_timezone(&Local))
 }
 
-fn parse_utc_datetime(s: &str) -> Result<DateTime<Utc>> {
+fn parse_utc_datetime(s: &str) -> Result<DateTime<Local>> {
     const ITEMS: &'static [Item<'static>] = &[
         Item::Numeric(Numeric::Year, Pad::Zero),
         Item::Numeric(Numeric::Month, Pad::Zero),
@@ -115,10 +115,10 @@ fn parse_utc_datetime(s: &str) -> Result<DateTime<Utc>> {
     parsed
         .to_datetime()
         .context("Could not parse datetime")
-        .map(|d| d.with_timezone(&Utc))
+        .map(|d| d.with_timezone(&Local))
 }
 
-fn parse_date(prop: &Property) -> Result<DateTime<Utc>> {
+fn parse_date(prop: &Property) -> Result<DateTime<Local>> {
     let value = prop.value.as_ref().context("no value found")?;
     const ITEMS: &'static [Item<'static>] = &[
         Item::Numeric(Numeric::Year, Pad::Zero),
@@ -133,5 +133,9 @@ fn parse_date(prop: &Property) -> Result<DateTime<Utc>> {
         .to_naive_date()
         .context(format!("Invalid date: {}", value))?;
 
-    Ok(Date::from_utc(date, Utc).and_hms(0, 0, 0))
+    let local_date = Local
+        .ymd(date.year(), date.month(), date.day())
+        .and_hms(0, 0, 0);
+
+    Ok(local_date)
 }
