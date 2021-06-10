@@ -24,11 +24,12 @@ pub fn draw(f: &mut Frame<CrosstermBackend<Stdout>>, entries: &Calendar) {
         Weekday::Mon,
     );
     for i in 0usize..7 {
+        let day = start_date + Duration::days(i.try_into().unwrap());
+
         let block = Block::default()
-            .title(format!("Day {}", i))
+            .title(day.format("%a, %x").to_string())
             .borders(Borders::all());
 
-        let day = start_date + Duration::days(i.try_into().unwrap());
         let day_list = build_list_for_day(size.height, entries, day).block(block);
         f.render_widget(day_list, cols[i]);
     }
