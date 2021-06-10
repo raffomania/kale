@@ -18,3 +18,5 @@ I've compiled a short list containing my highly subjective reasons to reinvent t
 - [*calendar-cli*](https://github.com/tobixen/calendar-cli) Doesn't work offline.
 - [*Nextcloud Calendar*](https://github.com/nextcloud/calendar) Limited keyboard control, Web-based, doesn't work offline.
 - [*BORG Calendar*](https://github.com/mikeberger/borg_calendar) Doesn't support DAV syncing.
+- [*KOrganizer*](https://invent.kde.org/pim/korganizer) Limited keyboard control.
+- [*calcurse*](https://github.com/lfos/calcurse) No graphical weekly overview, experimental DAV syncing.
