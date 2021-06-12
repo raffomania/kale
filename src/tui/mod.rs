@@ -13,7 +13,7 @@ use tui::{backend::CrosstermBackend, Terminal};
 
 use crate::calendar::Calendar;
 
-use self::events::Event;
+use self::{entries::EntryTable, events::Event};
 
 pub fn start(calendar: Calendar) -> Result<()> {
     enable_raw_mode()?;
@@ -25,7 +25,9 @@ pub fn start(calendar: Calendar) -> Result<()> {
 
     loop {
         terminal.draw(|f| {
-            entries::draw(f, &calendar);
+            let size = f.size();
+            let table = EntryTable::new(&calendar);
+            f.render_widget(table, size);
         })?;
 
         match rx.recv()? {

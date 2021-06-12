@@ -1,37 +1,46 @@
-use std::{convert::TryInto, io::Stdout};
+use std::convert::TryInto;
 
 use chrono::{Datelike, Duration, Local, NaiveDate, Timelike, Weekday};
 use std::convert::TryFrom;
 use tui::{
-    backend::CrosstermBackend,
     layout::Rect,
     text::Span,
-    widgets::{Block, Borders, List, ListItem},
-    Frame,
+    widgets::{Block, Borders, List, ListItem, Widget},
 };
 
 use crate::calendar::Calendar;
 
-pub fn draw(f: &mut Frame<CrosstermBackend<Stdout>>, entries: &Calendar) {
-    let size = f.size();
-    let width = size.width / 7;
-    let cols: Vec<Rect> = (0..7)
-        .map(|i| Rect::new(size.x + width * i, size.y, width, size.height))
-        .collect();
-    let start_date = NaiveDate::from_isoywd(
-        Local::now().year(),
-        Local::now().iso_week().week(),
-        Weekday::Mon,
-    );
-    for i in 0usize..7 {
-        let day = start_date + Duration::days(i.try_into().unwrap());
+pub struct EntryTable<'a> {
+    entries: &'a Calendar,
+}
 
-        let block = Block::default()
-            .title(day.format("%a, %x").to_string())
-            .borders(Borders::all());
+impl<'a> EntryTable<'a> {
+    pub fn new(entries: &'a Calendar) -> Self {
+        EntryTable { entries }
+    }
+}
 
-        let day_list = build_list_for_day(size.height, entries, day).block(block);
-        f.render_widget(day_list, cols[i]);
+impl<'a> Widget for EntryTable<'a> {
+    fn render(self, size: Rect, buf: &mut tui::buffer::Buffer) {
+        let width = size.width / 7;
+        let cols: Vec<Rect> = (0..7)
+            .map(|i| Rect::new(size.x + width * i, size.y, width, size.height))
+            .collect();
+        let start_date = NaiveDate::from_isoywd(
+            Local::now().year(),
+            Local::now().iso_week().week(),
+            Weekday::Mon,
+        );
+        for i in 0usize..7 {
+            let day = start_date + Duration::days(i.try_into().unwrap());
+
+            let block = Block::default()
+                .title(day.format("%a, %x").to_string())
+                .borders(Borders::all());
+
+            let day_list = build_list_for_day(size.height, self.entries, day).block(block);
+            day_list.render(cols[i], buf);
+        }
     }
 }
 
