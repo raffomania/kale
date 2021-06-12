@@ -1,4 +1,5 @@
 use anyhow::Result;
+use chrono::{Datelike, Local};
 use crossterm::{
     event::{KeyCode, KeyEvent, KeyModifiers},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
@@ -6,14 +7,19 @@ use crossterm::{
 };
 use std::io;
 
-mod entries;
+mod entry_table;
 mod events;
+mod status_bar;
 
-use tui::{backend::CrosstermBackend, Terminal};
+use tui::{
+    backend::CrosstermBackend,
+    layout::{Constraint, Layout},
+    Terminal,
+};
 
-use crate::calendar::Calendar;
+use crate::{calendar::Calendar, tui::status_bar::StatusBar};
 
-use self::{entries::EntryTable, events::Event};
+use self::{entry_table::EntryTable, events::Event};
 
 pub fn start(calendar: Calendar) -> Result<()> {
     enable_raw_mode()?;
@@ -26,8 +32,15 @@ pub fn start(calendar: Calendar) -> Result<()> {
     loop {
         terminal.draw(|f| {
             let size = f.size();
-            let table = EntryTable::new(&calendar);
-            f.render_widget(table, size);
+            let date = Local::now();
+            let week = date.iso_week();
+            let layout = Layout::default()
+                .constraints(vec![Constraint::Length(2), Constraint::Min(0)])
+                .split(size);
+            let status_bar = StatusBar::new(week);
+            f.render_widget(status_bar, layout[0]);
+            let table = EntryTable::new(&calendar, week);
+            f.render_widget(table, layout[1]);
         })?;
 
         match rx.recv()? {
