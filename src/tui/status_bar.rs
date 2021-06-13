@@ -1,18 +1,19 @@
-use chrono::{Datelike, IsoWeek, NaiveDate};
+use chrono::prelude::*;
+use chrono::{IsoWeek, Locale, NaiveDate};
 use tui::{
-    layout::{Constraint, Direction, Layout},
     style::{Modifier, Style},
-    text::{Span, Spans},
+    text::Span,
     widgets::Widget,
 };
 
 pub struct StatusBar {
     week: IsoWeek,
+    locale: Locale,
 }
 
 impl StatusBar {
-    pub fn new(week: IsoWeek) -> Self {
-        StatusBar { week }
+    pub fn new(week: IsoWeek, locale: Locale) -> Self {
+        StatusBar { week, locale }
     }
 }
 
@@ -20,10 +21,11 @@ impl Widget for StatusBar {
     fn render(self, area: tui::layout::Rect, buf: &mut tui::buffer::Buffer) {
         let start_of_week =
             NaiveDate::from_isoywd(self.week.year(), self.week.week(), chrono::Weekday::Mon);
-        let start_of_month = start_of_week.with_day(1).unwrap();
-        let week_in_month = start_of_week.iso_week().week() - start_of_month.iso_week().week() + 1;
-        let month = start_of_week.format("%B");
-        let date_text = format!("Week {}, {} {}", week_in_month, month, start_of_week.year());
+        let month = Local
+            .from_local_date(&start_of_week)
+            .unwrap()
+            .format_localized("%B", self.locale);
+        let date_text = format!("{} {}", month, self.week.year(),);
         let date_span = Span::styled(date_text, Style::default().add_modifier(Modifier::DIM));
         let kale = Span::from(format!("🥬"));
         buf.set_span(area.x, area.y, &kale, area.width);

@@ -1,6 +1,7 @@
 use std::convert::TryInto;
 
-use chrono::{Duration, IsoWeek, NaiveDate, Timelike, Weekday};
+use chrono::{prelude::*, Duration};
+use chrono::{IsoWeek, NaiveDate, Timelike, Weekday};
 use std::convert::TryFrom;
 use tui::{
     layout::Rect,
@@ -13,11 +14,16 @@ use crate::calendar::Calendar;
 pub struct EntryTable<'a> {
     entries: &'a Calendar,
     week: IsoWeek,
+    locale: chrono::Locale,
 }
 
 impl<'a> EntryTable<'a> {
-    pub fn new(entries: &'a Calendar, week: IsoWeek) -> Self {
-        EntryTable { entries, week }
+    pub fn new(entries: &'a Calendar, week: IsoWeek, locale: chrono::Locale) -> Self {
+        EntryTable {
+            entries,
+            week,
+            locale,
+        }
     }
 }
 
@@ -31,8 +37,13 @@ impl<'a> Widget for EntryTable<'a> {
         for i in 0usize..7 {
             let day = start_date + Duration::days(i.try_into().unwrap());
 
+            let timezone_day = Local.from_local_date(&day).unwrap();
             let block = Block::default()
-                .title(day.format("%a, %x").to_string())
+                .title(
+                    timezone_day
+                        .format_localized("%a, %x", self.locale)
+                        .to_string(),
+                )
                 .borders(Borders::all());
 
             let day_list = build_list_for_day(size.height, self.entries, day).block(block);
