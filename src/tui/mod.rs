@@ -80,7 +80,7 @@ pub fn start(calendar: Calendar, locale: locale_config::Locale) -> Result<()> {
                 }
             }
             Event::Resize => {
-                dbg!("resize");
+                // dbg!("resize");
             }
             Event::Quit => {
                 break;
