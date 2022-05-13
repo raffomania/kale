@@ -11,6 +11,14 @@ A small TUI calendar app.
 
 Kale can show non-recurring events from a hard-coded directory of caldav files. I'd say it's not yet ready for any real use.
 
+## Roadmap
+
+- [x] show non-recurring events
+- [ ] show recurring events
+- [ ] configure path to caldav files
+- [ ] add keybinding overview
+- [ ] speed up initial file scan
+
 ## Alternative Projects
 
 I've compiled a short list containing my highly subjective reasons to reinvent the wheel instead of using existing software:
