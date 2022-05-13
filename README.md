@@ -7,6 +7,10 @@ A small TUI calendar app.
 - 📊 Google-calendar-like weekly overview
 - 🔌 Offline-first, using [vdirsyncer](https://github.com/pimutils/vdirsyncer) 
 
+## Status
+
+Kale can show non-recurring events from a hard-coded directory of caldav files. I'd say it's not yet ready for any real use.
+
 ## Alternative Projects
 
 I've compiled a short list containing my highly subjective reasons to reinvent the wheel instead of using existing software:
